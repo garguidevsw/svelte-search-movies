@@ -3,7 +3,6 @@
     import Movie from './movie.svelte';
 
     let value = "";
-    let loading = false;
     let response = [];
 
     const handleInput = (event) => {
@@ -11,27 +10,25 @@
     }
 
     $: if(value.length > 2){
-        loading = true;
-        fetch(`http://www.omdbapi.com/?s=${value}&apikey=c27398bd`)
+        
+        response = fetch(`http://www.omdbapi.com/?s=${value}&apikey={yourAPIKEY}`)
+            // .then(res => !res.ok() && new Error('Something bad happened with the fetching of movies'))
             .then( res => res.json())
-            .then(apiResponse => {
-                response = apiResponse.Search || [];
-                console.log(apiResponse);
-                loading = false;
-            })
+            .then(apiResponse => response = apiResponse.Search || [])
     }
 
 </script>
 
 <input placeholder="Search movie" value={value} on:input={handleInput} type="text">
 
-{#if loading}
+{#await response}
     <strong>Loading....</strong>
-{:else}
-    {#each response as { Title, Poster, Year}}
+{:then movies}
+    {#each movies as { Title, Poster, Year}}
         <Movie title={Title} poster={Poster} year={Year}></Movie>
     {:else}
         <strong>No hay resultados</strong>
     {/each}
-
-{/if}
+{:catch error}
+    <p>❌ There has been an error</p>
+{/await}
